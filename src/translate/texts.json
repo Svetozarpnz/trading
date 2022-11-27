@@ -1,0 +1,34 @@
+{
+  "selectFiles.offerselect": {
+    "ru": "Выбери один или несколько файлов отчёта брокера в формате",
+    "en": "Select one or more files of broker"
+  },
+  "selectFiles.fileExtnention": {
+    "ru": ".html",
+    "en": ".html"
+  },
+  "tabs.selectFiles": {
+    "ru": "Выбор файлов",
+    "en": "File select"
+  },
+  "tabs.table": {
+    "ru": "Таблица сделок",
+    "en": "Table of deals"
+  },
+  "tabs.analytics": {
+    "ru": "Аналитика",
+    "en": "Analytics"
+  },
+  "tabs.help": {
+    "ru": "Справка",
+    "en": "Help"
+  },
+  "help.parse.title": {
+    "ru": "Парсинг файлов отчета брокера",
+    "en": ""
+  },
+  "help.parse.desc": {
+    "ru": "Выбор файлов",
+    "en": ""
+  }
+}

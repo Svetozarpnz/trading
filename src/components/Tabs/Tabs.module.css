@@ -1,0 +1,20 @@
+.nav {
+    display: flex;
+}
+
+.tab {
+    display: block;
+    box-sizing: border-box;
+    padding: 5px 30px;
+    font: 12px Arial;
+    margin: 0 1px;
+    width: 200px;
+    text-align: center;
+}
+button.tab:hover {
+    cursor: pointer;
+}
+
+div.tab {
+    border: 2px solid white
+}

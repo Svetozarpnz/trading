@@ -2,10 +2,11 @@ import React, { useCallback } from 'react';
 import { getResultTable, handleSelectFile, saveFile } from '../../utils';
 import styles from './SelectFile.module.css';
 import { useDispatch, useSelector } from '../../components/StateManager/Context';
-import { EExportFileFormat,  } from '../../common/types';
+import { FileFormat,  } from '../../common/types';
 import { useTranslate } from '../../common/hooks';
 import { State } from '../../components/StateManager/types';
 import { PARSE } from '../../components/StateManager/actions';
+import { renderFileFormatTexts } from './renders';
 
 
 const SelectFile = () => {
@@ -21,7 +22,7 @@ const SelectFile = () => {
 
   const handleSaveFile = useCallback(
     () => {
-      saveFile(data, EExportFileFormat.CSV);
+      saveFile(data, FileFormat.CSV);
     },
     [data]
   );
@@ -29,10 +30,10 @@ const SelectFile = () => {
   return (
     <div className={styles.wrap}>
       <div className={styles.message}>
-        {offerSelectText} <span className={styles.code}>.html</span>.
+        {offerSelectText} {renderFileFormatTexts}
       </div>
       <div className={styles.fileInput}>
-        <input type="file" multiple onChange={handleSelect} accept=".html"/>
+        <input type="file" multiple onChange={handleSelect} accept=".html, .csv"/>
       </div>
       <div className={styles.saveBlock}>
         {

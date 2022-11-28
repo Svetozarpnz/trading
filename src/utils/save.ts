@@ -1,10 +1,10 @@
-import { BrokerData, Deal, EExportFileFormat } from '../common/types';
+import { BrokerData, Deal, FileFormat } from '../common/types';
 
-const createFileData = (data: Deal[] | null, format: EExportFileFormat) => {
+const createFileData = (data: Deal[] | null, format: FileFormat) => {
   switch (format) {
-    case EExportFileFormat.CSV:
+    case FileFormat.CSV:
       return createCsvContent(data);
-    case EExportFileFormat.HTML:
+    case FileFormat.HTML:
       return createCsvContent(data);
     default:
       return createCsvContent(data);
@@ -25,7 +25,7 @@ const createCsvContent =  (brokerData: Deal[] | null) => {
   return rows.join('\n')
 };
 
-export const saveFile = (data: Deal[] | null, format: EExportFileFormat = EExportFileFormat.CSV) => {
+export const saveFile = (data: Deal[] | null, format: FileFormat = FileFormat.CSV) => {
   const fileContent = createFileData(data, format);
 
   const blob = new Blob([fileContent], { type: 'text/plain' });

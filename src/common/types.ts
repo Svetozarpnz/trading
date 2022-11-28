@@ -19,7 +19,10 @@ export type Sprout = {
   closed: boolean;
 }
 
-export enum EExportFileFormat {
+export enum FileFormat {
   CSV = 'CSV',
   HTML = 'HTML',
 }
+
+export type FileContent = string | ArrayBuffer | null;
+

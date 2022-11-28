@@ -5,7 +5,7 @@ import React, { useLayoutEffect, useState } from 'react';
 export function useTranslate(keys: TranslateKey, insert?:string[]): string;
 export function useTranslate(keys: TranslateKey[], insert?:string[]): string[];
 export function useTranslate(keys: TranslateKey | TranslateKey[], insert?: string[]): string | string[] {
-  // TODO Здесь будет реализовано получения языка из интерфейса
+  // TODO Здесь будет реализовано получения языка из интерфейса, поэтому хук
   const lang = languages[0] as Lang;
 
   const translateFn = (key: TranslateKey) => translate(lang, key, insert);

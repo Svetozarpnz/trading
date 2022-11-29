@@ -1,22 +1,28 @@
 import { SyntheticEvent } from 'react';
-import { BrokerData, BrokerRecord, FileContent, FileFormat } from '../common/types';
+import { BrokerRecord, FileContent, FileFormat, ParsedBrokerData } from '../common/types';
 
-const data: BrokerData  = [];
 const headerData: string[] = [];
+
+const parsedData: ParsedBrokerData = {
+  [FileFormat.CSV]: [],
+  [FileFormat.HTML]: [],
+}
 
 const parseDom = (str: FileContent) => typeof str === 'string' ?
   (new DOMParser()).parseFromString(str, "text/html") : null;
 
-const parseCsv = (str: FileContent) => {
+const parseCsv = (str: FileContent, fileName: string) => {
   if (typeof str !== 'string') {
     return null
   }
   const rows = str.split('\n');
   const [headerRow = '', ...otherRows] = rows;
   const headerCsvData = headerRow.split(';').map((title) => title);
+
   otherRows.forEach((row) => {
     const currentDeal: BrokerRecord = {};
-    row.forEach((val, index) => {
+    const splittedRow = row.split(';');
+    splittedRow.forEach((val, index) => {
       const num = val.replace(' ', '');
       const title = headerCsvData[index];
       if (title) {
@@ -24,7 +30,10 @@ const parseCsv = (str: FileContent) => {
           ? str
           : num.replace('.', ',');
       }
-    })
+      currentDeal.file = fileName
+      currentDeal.fileFormat = FileFormat.CSV
+    });
+    parsedData[FileFormat.CSV].push(currentDeal);
   })
 
 }
@@ -63,6 +72,7 @@ const getDealDataFromRow = (row: NodeListOf<HTMLElementTagNameMap['td']>, fileNa
     }
   });
   currentDeal.file = fileName || '';
+  currentDeal.fileFormat = FileFormat.HTML;
   return currentDeal;
 }
 
@@ -80,20 +90,7 @@ const fillDataFromStandartHtmlTable = (table: Element | null, fileName: string) 
     if (isRowContainsData) {
       const currentRow = tr.querySelectorAll('td');
       const currentDeal = getDealDataFromRow(currentRow, fileName);
-      data.push(currentDeal);
-    }
-  });
-}
-const fillDataFromStandartCsvTable = (table: Element | null, fileName: string) => {
-  parseCsv()
-
-  const count = dataRows?.[0]?.children?.length ?? 0;
-  dataRows.forEach((tr, index) => {
-    const isRowContainsData = index && tr.children.length === count;
-    if (isRowContainsData) {
-      const currentRow = tr.querySelectorAll('td');
-      const currentDeal = getDealDataFromRow(currentRow, fileName);
-      data.push(currentDeal);
+      parsedData[FileFormat.HTML].push(currentDeal);
     }
   });
 }
@@ -109,7 +106,7 @@ const getFileFormat = (fileName?: string): FileFormat => {
   return formatText.toLowerCase() as FileFormat;
 }
 
-export const handleSelectFile = (e: SyntheticEvent<HTMLInputElement>) => new Promise<BrokerData>(
+export const handleSelectFile = (e: SyntheticEvent<HTMLInputElement>) => new Promise<ParsedBrokerData>(
   (resolve) => {
     const fileList = e.currentTarget.files;
     const fileCount = fileList?.length || 0;
@@ -125,15 +122,14 @@ export const handleSelectFile = (e: SyntheticEvent<HTMLInputElement>) => new Pro
         const table = findTableElement(document);
         fillDataFromStandartHtmlTable(table, currentFile?.name ?? '');
       } else {
-        const data = parseCsv(result)
-        fillDataFromStandartCsv(currentFile?.name ?? '')
+        parseCsv(result, currentFile?.name ?? '');
       }
 
       const isLeftFile = ++fileOrder < fileCount && currentFile
       if (isLeftFile) {
         fileReader.readAsText(currentFile)
       } else {
-        resolve(data);
+        resolve(parsedData);
       }
     }
 

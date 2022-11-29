@@ -26,3 +26,8 @@ export enum FileFormat {
 
 export type FileContent = string | ArrayBuffer | null;
 
+export type ParsedBrokerData = {
+  [FileFormat.CSV]: BrokerData;
+  [FileFormat.HTML]: BrokerData;
+}
+

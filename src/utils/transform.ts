@@ -1,5 +1,9 @@
-import { BrokerData, BrokerRecord, Deal, Sprout } from '../common/types';
-import { ETitles, TABLE_TITLES_CONFIG } from '../common/constants/tableConfig';
+import { BrokerData, BrokerRecord, Deal, FileFormat, ParsedBrokerData, Sprout } from '../common/types';
+import {
+  ETitles,
+  STANDART_CSV_TABLE_TITLES_CONFIG,
+  STANDART_HTML_TABLE_TITLES_CONFIG
+} from '../common/constants/tableConfig';
 import { sum, toNumber } from './math';
 
 const idHeaderText = 'Номер сделки';
@@ -14,9 +18,6 @@ const removeDuplicate = (data: BrokerRecord[]) => {
   const idsSet = new Set();
   return data.filter((row) => {
     const id = row[index || '']
-    if (id === '3280783285') {
-      const i = 1;
-    }
     if (!idsSet.has(id)) {
       idsSet.add(id);
 
@@ -55,10 +56,14 @@ const sortByDate = (tableData: Deal[]) => tableData.sort((a, b) => {
   return (new Date(dateA)).getTime() - (new Date(dateB)).getTime()
 })
 
-export const getResultTable = (tableData: BrokerData) => {
-  let brokerData: BrokerData = removeDuplicate(tableData);
-  let result: Deal[] = transformTable(brokerData, TABLE_TITLES_CONFIG);
-  result = sortByDate (result);
+export const getResultTable = (parsed: ParsedBrokerData) => {
+  const uniqueDeals: ParsedBrokerData = {
+    [FileFormat.CSV]: removeDuplicate(parsed[FileFormat.CSV]),
+    [FileFormat.HTML]: removeDuplicate(parsed[FileFormat.HTML])
+  }
+  let resultFromHtml: Deal[] = transformTable(uniqueDeals[FileFormat.HTML], STANDART_HTML_TABLE_TITLES_CONFIG);
+  let resultFromCsv: Deal[] = transformTable(uniqueDeals[FileFormat.CSV], STANDART_CSV_TABLE_TITLES_CONFIG);
+  result = sortByDate(result);
 
   return result
 }

@@ -34,8 +34,8 @@ const transformTable = (tableData: BrokerData, tableConfig: Record<string, ETitl
       (newRow, title) => {
         const transformedKey = tableConfig[title]!;
         const isNumber = titlesForNumber.includes(transformedKey);
-        const oldValue = row[title]!;
-        const value = isNumber ? toNumber(oldValue) : oldValue;
+        const stringValue = row[title]!;
+        const value = isNumber ? toNumber(stringValue) : stringValue;
         // суммируем значения для полей, которые в конфиге указаны одинаково
         const summedValue = newRow[transformedKey] ? sum(newRow[transformedKey], value) : value;
 
@@ -57,15 +57,12 @@ const sortByDate = (tableData: Deal[]) => tableData.sort((a, b) => {
 })
 
 export const getResultTable = (parsed: ParsedBrokerData) => {
-  const uniqueDeals: ParsedBrokerData = {
-    [FileFormat.CSV]: removeDuplicate(parsed[FileFormat.CSV]),
-    [FileFormat.HTML]: removeDuplicate(parsed[FileFormat.HTML])
-  }
-  let resultFromHtml: Deal[] = transformTable(uniqueDeals[FileFormat.HTML], STANDART_HTML_TABLE_TITLES_CONFIG);
-  let resultFromCsv: Deal[] = transformTable(uniqueDeals[FileFormat.CSV], STANDART_CSV_TABLE_TITLES_CONFIG);
-  result = sortByDate(result);
+  let resultFromHtml: Deal[] = transformTable(parsed[FileFormat.HTML], STANDART_HTML_TABLE_TITLES_CONFIG);
+  let resultFromCsv: Deal[] = transformTable(parsed[FileFormat.CSV], STANDART_CSV_TABLE_TITLES_CONFIG);
+  let uniqueDeals = removeDuplicate([... resultFromCsv, ...resultFromHtml]);
+   const sortedByDate = uniqueDeals = sortByDate(uniqueDeals);
 
-  return result
+  return sortedByDate
 }
 type IndexedSprout = Sprout & { index: number};
 

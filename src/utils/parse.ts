@@ -1,5 +1,6 @@
 import { SyntheticEvent } from 'react';
 import { BrokerRecord, FileContent, FileFormat, ParsedBrokerData } from '../common/types';
+import { getIsAvailableFileFormat } from './check';
 
 const headerData: string[] = [];
 
@@ -10,6 +11,32 @@ const parsedData: ParsedBrokerData = {
 
 const parseDom = (str: FileContent) => typeof str === 'string' ?
   (new DOMParser()).parseFromString(str, "text/html") : null;
+
+
+const fillDataFromStandartHtmlTable = (table: Element | null, fileName: string) => {
+  if (!table) {
+    console.log('Не найдена таблица сделок в файле: ', fileName)
+    return;
+  }
+  const dataRows = table.querySelectorAll('tr');
+  fillHeaderData(dataRows?.[0]);
+
+  const count = dataRows?.[0]?.children?.length ?? 0;
+  dataRows.forEach((tr, index) => {
+    const isRowContainsData = index && tr.children.length === count;
+    if (isRowContainsData) {
+      const currentRow = tr.querySelectorAll('td');
+      const currentDeal = getDealDataFromRow(currentRow, fileName);
+      parsedData[FileFormat.HTML].push(currentDeal);
+    }
+  });
+}
+
+const parseHtml = (str: FileContent, fileName: string) => {
+  const document = parseDom(str);
+  const table = findTableElement(document);
+  fillDataFromStandartHtmlTable(table, fileName ?? '');
+}
 
 const parseCsv = (str: FileContent, fileName: string) => {
   if (typeof str !== 'string') {
@@ -27,7 +54,7 @@ const parseCsv = (str: FileContent, fileName: string) => {
       const title = headerCsvData[index];
       if (title) {
         currentDeal[title] = isNaN(Number(num))
-          ? str
+          ? num
           : num.replace('.', ',');
       }
       currentDeal.file = fileName
@@ -76,56 +103,46 @@ const getDealDataFromRow = (row: NodeListOf<HTMLElementTagNameMap['td']>, fileNa
   return currentDeal;
 }
 
-const fillDataFromStandartHtmlTable = (table: Element | null, fileName: string) => {
-  if (!table) {
-    console.log('Не найдена таблица сделок в файле: ', fileName)
-    return;
-  }
-  const dataRows = table.querySelectorAll('tr');
-  fillHeaderData(dataRows?.[0]);
-
-  const count = dataRows?.[0]?.children?.length ?? 0;
-  dataRows.forEach((tr, index) => {
-    const isRowContainsData = index && tr.children.length === count;
-    if (isRowContainsData) {
-      const currentRow = tr.querySelectorAll('td');
-      const currentDeal = getDealDataFromRow(currentRow, fileName);
-      parsedData[FileFormat.HTML].push(currentDeal);
-    }
-  });
-}
-
-const getFileFormat = (fileName?: string): FileFormat => {
+const getFileFormat = (fileName?: string): string | null => {
   if (!fileName) {
-    return FileFormat.HTML
+    return null
   }
 
   const splitted = fileName.split('.');
   const formatText = splitted[splitted.length - 1] as string;
 
-  return formatText.toLowerCase() as FileFormat;
+  return formatText.toLowerCase();
+}
+
+const parseFile = (file: File, content: FileContent) => {
+  const fileFormat = getFileFormat(file?.name)
+  const isAvailableFormat = getIsAvailableFileFormat(fileFormat);
+  if (isAvailableFormat) {
+    if (fileFormat === FileFormat.HTML) {
+      parseHtml(content, file?.name ?? '')
+    }
+    if (fileFormat === FileFormat.CSV) {
+      parseCsv(content, file?.name ?? '');
+    }
+  }
 }
 
 export const handleSelectFile = (e: SyntheticEvent<HTMLInputElement>) => new Promise<ParsedBrokerData>(
   (resolve) => {
     const fileList = e.currentTarget.files;
-    const fileCount = fileList?.length || 0;
+    const countOfFile = fileList?.length || 0;
     let fileOrder = 0;
     const fileReader = new FileReader();
 
     fileReader.onload = () => {
       const { result } = fileReader;
       const currentFile = fileList?.[fileOrder];
-      const fileFormat = getFileFormat(currentFile?.name)
-      if (fileFormat === FileFormat.HTML) {
-        const document = parseDom(result);
-        const table = findTableElement(document);
-        fillDataFromStandartHtmlTable(table, currentFile?.name ?? '');
-      } else {
-        parseCsv(result, currentFile?.name ?? '');
+
+      if (currentFile && result) {
+        parseFile(currentFile, result);
       }
 
-      const isLeftFile = ++fileOrder < fileCount && currentFile
+      const isLeftFile = ++fileOrder < countOfFile && currentFile
       if (isLeftFile) {
         fileReader.readAsText(currentFile)
       } else {

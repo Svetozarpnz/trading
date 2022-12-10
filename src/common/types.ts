@@ -20,8 +20,8 @@ export type Sprout = {
 }
 
 export enum FileFormat {
-  CSV = 'CSV',
-  HTML = 'HTML',
+  CSV = 'csv',
+  HTML = 'html',
 }
 
 export type FileContent = string | ArrayBuffer | null;

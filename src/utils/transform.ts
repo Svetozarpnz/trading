@@ -1,23 +1,20 @@
 import { BrokerData, BrokerRecord, Deal, FileFormat, ParsedBrokerData, Sprout } from '../common/types';
 import {
   ETitles,
-  STANDART_CSV_TABLE_TITLES_CONFIG,
-  STANDART_HTML_TABLE_TITLES_CONFIG
 } from '../common/constants/tableConfig';
 import { sum, toNumber } from './math';
 
-const idHeaderText = 'Номер сделки';
+const idHeaderText = ETitles.id;
 const testStock = 'Распадская';
 const enum EDealTypes {
   BUY = 'Покупка',
   SELL = 'Продажа'
 }
 
-const removeDuplicate = (data: BrokerRecord[]) => {
-  const index = Object.keys(data?.[0] || {}).find((title) => title === idHeaderText);
+const removeDuplicate = (data: Deal[]) => {
   const idsSet = new Set();
   return data.filter((row) => {
-    const id = row[index || '']
+    const id = row[idHeaderText]
     if (!idsSet.has(id)) {
       idsSet.add(id);
 
@@ -27,17 +24,20 @@ const removeDuplicate = (data: BrokerRecord[]) => {
   });
 }
 
-const transformTable = (tableData: BrokerData, tableConfig: Record<string, ETitles>, ) => {
+const checkHasKey = (key: ETitles): key is keyof Deal => [ETitles.date, ETitles.fee, ETitles.price, ETitles.stock, ETitles.time, ETitles.type, ETitles.volume].includes(key);
+
+export const transformTable = (tableData: BrokerData, tableConfig: Record<string, ETitles>, ) => {
   const titlesForNumber = [ETitles.fee, ETitles.price, ETitles.volume];
   const getNewRow = (row: Record<string, string>) =>
     Object.keys(tableConfig).reduce(
       (newRow, title) => {
         const transformedKey = tableConfig[title]!;
         const isNumber = titlesForNumber.includes(transformedKey);
-        const stringValue = row[title]!;
+        const stringValue = row[title] ?? '';
         const value = isNumber ? toNumber(stringValue) : stringValue;
+        const hasKey = checkHasKey(transformedKey) && newRow.hasOwnProperty(transformedKey);
         // суммируем значения для полей, которые в конфиге указаны одинаково
-        const summedValue = newRow[transformedKey] ? sum(newRow[transformedKey], value) : value;
+        const summedValue = hasKey ? sum(newRow[transformedKey], value) : value;
 
         return { ...newRow, [transformedKey]: summedValue }
       },
@@ -51,16 +51,14 @@ const sortByDate = (tableData: Deal[]) => tableData.sort((a, b) => {
   const [dA, mA, yA] = a[ETitles.date].split('.');
   const dateA = `${yA}-${mA}-${dA}T${a[ETitles.time]}`;
   const [dB, mB, yB] = b[ETitles.date].split('.');
-  const dateB = `${yB}-${mB}-${dB}T${a[ETitles.time]}`;
+  const dateB = `${yB}-${mB}-${dB}T${b[ETitles.time]}`;
 
   return (new Date(dateA)).getTime() - (new Date(dateB)).getTime()
 })
 
 export const getResultTable = (parsed: ParsedBrokerData) => {
-  let resultFromHtml: Deal[] = transformTable(parsed[FileFormat.HTML], STANDART_HTML_TABLE_TITLES_CONFIG);
-  let resultFromCsv: Deal[] = transformTable(parsed[FileFormat.CSV], STANDART_CSV_TABLE_TITLES_CONFIG);
-  let uniqueDeals = removeDuplicate([... resultFromCsv, ...resultFromHtml]);
-   const sortedByDate = uniqueDeals = sortByDate(uniqueDeals);
+  const uniqueDeals = removeDuplicate(Object.values(parsed).flat());
+  const sortedByDate = sortByDate(uniqueDeals);
 
   return sortedByDate
 }

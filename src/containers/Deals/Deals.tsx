@@ -52,9 +52,6 @@ const Deals = () => {
 
   return (
     <table>
-      <div>Комиссия в сбере за период{data ? data?.reduce((acc, deal) => deal[ETitles.fee] + acc, 0)/7*6 : 0}</div>
-      <div>Комиссия в тинькове за этот же период{data ? data?.reduce((acc, deal) => deal[ETitles.fee] + acc, 0)/7*5 : 0}</div>
-      <div>Сумма за ежемесячный взнос за этот же период: 7540 </div>
       <thead>{tableHeader}</thead>
       <tbody>{tableBody}</tbody>
     </table>

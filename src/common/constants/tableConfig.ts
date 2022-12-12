@@ -1,6 +1,9 @@
+import { FileFormat } from '../types';
+
 type TableTitles = Record<string, ETitles>;
 
 export enum ETitles {
+  id = 'id',
   date = 'date',
   time = 'time',
   stock = 'stock',
@@ -11,7 +14,14 @@ export enum ETitles {
   type = 'type',
 }
 
+export const TABLE_TITLES = {
+  id: 'Номер сделки',
+  date: 'Дата заключения',
+  time: 'Время заключения'
+}
+
 export const STANDART_HTML_TABLE_TITLES_CONFIG: TableTitles = {
+  'Номер сделки' : ETitles.id,
   'Дата заключения' : ETitles.date,
   'Время заключения': ETitles.time,
   'Наименование ЦБ': ETitles.stock,
@@ -24,8 +34,8 @@ export const STANDART_HTML_TABLE_TITLES_CONFIG: TableTitles = {
 };
 
 export const STANDART_CSV_TABLE_TITLES_CONFIG: TableTitles = {
+  'Номер сделки' : ETitles.id,
   'Дата заключения' : ETitles.date,
-  'Время заключения': ETitles.time,
   'Код финансового инструмента': ETitles.code,
   'Цена': ETitles.price,
   'Количество': ETitles.volume,
@@ -34,5 +44,8 @@ export const STANDART_CSV_TABLE_TITLES_CONFIG: TableTitles = {
   'Операция': ETitles.type,
 }
 
-
+export const TABLE_CONFIGS = {
+  html: STANDART_HTML_TABLE_TITLES_CONFIG,
+  csv: STANDART_CSV_TABLE_TITLES_CONFIG,
+}
 

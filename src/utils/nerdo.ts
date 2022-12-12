@@ -26,7 +26,9 @@ export const sort = (arr: any[], options: { by: string, comparator: () => number
 export const isPlainObj = (obj: unknown): obj is PlainObj =>
   isObj(obj) && Object.values(obj).every((value) => isPrimitive(value));
 
-export const getLast = (value: unknown, options?: { separator: string; sorted: boolean}): unknown => {
+// TODO: сделать опцию sorted применимую к любым вхоным данным
+// TODO: сделать точный тип ответа, зависимый от входного
+export const getLast = (value: unknown, options?: { separator?: string; sorted?: boolean}): unknown => {
   if (isStr(value)) {
     const iterable = options?.separator ? value.split(options?.separator) : value;
     return iterable[iterable.length - 1];
@@ -42,9 +44,38 @@ export const getLast = (value: unknown, options?: { separator: string; sorted: b
   return value
 }
 
+// TODO: сделать опцию sorted применимую к любым входным данным
+// TODO: сделать базовую функцию, на основе которой будут работать getLast и getFirst
+export const getFirst = (value: unknown, options?: { separator?: string; sorted?: boolean}): unknown => {
+  if (isStr(value)) {
+    const iterable = options?.separator ? value.split(options?.separator) : value;
+    return iterable[0];
+  }
+  if (isArr(value)) {
+    return value[0];
+  }
+  if (isObj(value)) {
+    const keys = options?.sorted ? Object.keys(value).sort() : Object.keys(value);
+    const firstKey = keys[0] as string;
+    return [firstKey, value[firstKey]];
+  }
+  return value
+}
+
+
+// TODO сделать входной тип объект и выходной его значения
+// TODO сделать входной тип NodeList
+export const toArr = <T extends Node>(value: NodeListOf<T>): T[] => {
+  const arr: T[] = [];
+  value.forEach((elem) => arr.push(elem));
+  return arr;
+}
+
 // types
 export type ObjKey = string | number | symbol;
 export type AnyObj = Record<ObjKey, unknown>;
 export type AnyFn = (...args: any[]) => any;
 export type Primitive = string | number | boolean | bigint | symbol | null | undefined;
 export type PlainObj = Record<ObjKey, Primitive>;
+
+

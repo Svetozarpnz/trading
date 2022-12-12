@@ -1,6 +1,12 @@
 import { SyntheticEvent } from 'react';
 import { BrokerRecord, FileContent, FileFormat, ParsedBrokerData } from '../common/types';
 import { getIsAvailableFileFormat } from './check';
+import { transformTable } from './transform';
+import {
+  TABLE_CONFIGS,
+  TABLE_TITLES
+} from '../common/constants/tableConfig';
+import { getFirst, getLast, toArr } from './nerdo';
 
 const headerData: string[] = [];
 
@@ -21,21 +27,32 @@ const fillDataFromStandartHtmlTable = (table: Element | null, fileName: string) 
   const dataRows = table.querySelectorAll('tr');
   fillHeaderData(dataRows?.[0]);
 
-  const count = dataRows?.[0]?.children?.length ?? 0;
-  dataRows.forEach((tr, index) => {
+  const dataRowsArr = toArr(dataRows);
+
+  const count = dataRowsArr?.[0]?.children?.length ?? 0;
+  const parsed = dataRowsArr.reduce((acc, tr, index) => {
     const isRowContainsData = index && tr.children.length === count;
     if (isRowContainsData) {
       const currentRow = tr.querySelectorAll('td');
       const currentDeal = getDealDataFromRow(currentRow, fileName);
-      parsedData[FileFormat.HTML].push(currentDeal);
+      acc.push(currentDeal);
     }
-  });
+    return acc
+  }, [] as BrokerRecord[]);
+  parsedData[FileFormat.HTML] = transformTable(parsed, TABLE_CONFIGS[FileFormat.HTML]);
 }
 
 const parseHtml = (str: FileContent, fileName: string) => {
   const document = parseDom(str);
   const table = findTableElement(document);
   fillDataFromStandartHtmlTable(table, fileName ?? '');
+}
+
+const splitDate = (fullDate: string) => {
+  const date = getFirst(fullDate, { separator: ' '});
+  const time = getLast(date, { separator: ' '});
+
+  return [date, time];
 }
 
 const parseCsv = (str: FileContent, fileName: string) => {
@@ -46,23 +63,31 @@ const parseCsv = (str: FileContent, fileName: string) => {
   const [headerRow = '', ...otherRows] = rows;
   const headerCsvData = headerRow.split(';').map((title) => title);
 
-  otherRows.forEach((row) => {
+  const parsed = otherRows.reduce((acc, row) => {
     const currentDeal: BrokerRecord = {};
     const splittedRow = row.split(';');
     splittedRow.forEach((val, index) => {
-      const num = val.replace(' ', '');
+      const trimmedValue = val.replace(' ', '');
       const title = headerCsvData[index];
       if (title) {
-        currentDeal[title] = isNaN(Number(num))
-          ? num
-          : num.replace('.', ',');
+        const isDate = title === TABLE_TITLES.date
+        // разбираем дату на время и дату
+        if (isDate) {
+          currentDeal[title] = getFirst(trimmedValue, { separator: ' '});
+          currentDeal[TABLE_TITLES.time] = getLast(trimmedValue, { separator: ' '});
+        } else {
+          currentDeal[title] = isNaN(Number(trimmedValue))
+            ? trimmedValue
+            : trimmedValue.replace('.', ',');
+        }
       }
       currentDeal.file = fileName
       currentDeal.fileFormat = FileFormat.CSV
     });
-    parsedData[FileFormat.CSV].push(currentDeal);
-  })
-
+    acc.push(currentDeal);
+    return acc;
+  }, [] as BrokerRecord[])
+  parsedData[FileFormat.CSV] = transformTable(parsed, TABLE_CONFIGS[FileFormat.CSV]);
 }
 
 const findTableElement = (dom: Document | null) => {

@@ -2,6 +2,7 @@ import { ETitles } from './constants/tableConfig';
 
 export type BrokerRecord = Record<string, string>;
 export type Deal = {
+  [ETitles.id]: string;
   [ETitles.date]: string;
   [ETitles.fee]: number;
   [ETitles.price]: number;
@@ -27,7 +28,7 @@ export enum FileFormat {
 export type FileContent = string | ArrayBuffer | null;
 
 export type ParsedBrokerData = {
-  [FileFormat.CSV]: BrokerData;
-  [FileFormat.HTML]: BrokerData;
+  [FileFormat.CSV]: Deal[];
+  [FileFormat.HTML]: Deal[];
 }
 
